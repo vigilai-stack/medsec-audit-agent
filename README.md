@@ -18,7 +18,7 @@
 | **Chittranjan Garg** | Co-Lead |
 | **Sangeeta Sinha** | Co-Lead |
 
-**Team Name**: Med-Sec Team  
+**Team Name**: Med-Sec Team  **(VigilAI Solutions)**
 **Track**: Agents for Good  
 **Submission Date**: July 2026
 
