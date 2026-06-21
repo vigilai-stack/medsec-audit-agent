@@ -4,7 +4,8 @@ import json
 import re
 import hashlib
 import time
-from typing import Dict, Any, Tuple
+import csv
+from typing import Dict, Any, Tuple, List
 from mcp.server.fastmcp import FastMCP
 
 # Define central configuration
@@ -147,6 +148,80 @@ def compliance_check(record: Dict[str, Any], standard: str = "HIPAA") -> Dict[st
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+# Expanded Tools for Testing
+@mcp.tool()
+def get_synthetic_patient(index: int) -> Dict[str, Any]:
+    """
+    Retrieve a specific synthetic patient record from the dataset (1 to 500).
+    """
+    try:
+        filepath = "data/synthetic_patients.json"
+        if not os.path.exists(filepath):
+            return {"status": "error", "error": "Patient dataset not generated yet."}
+            
+        with open(filepath, "r", encoding="utf-8") as f:
+            patients = json.load(f)
+            
+        if index < 1 or index > len(patients):
+            return {"status": "error", "error": f"Index out of range. Must be between 1 and {len(patients)}."}
+            
+        return {"status": "success", "patient": patients[index - 1]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+@mcp.tool()
+def get_adversary_payload(index: int) -> Dict[str, Any]:
+    """
+    Retrieve a specific adversarial/attack payload from the dataset (1 to 500).
+    """
+    try:
+        filepath = "data/adversary_payloads.csv"
+        if not os.path.exists(filepath):
+            return {"status": "error", "error": "Adversary payloads dataset not generated yet."}
+            
+        with open(filepath, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            payloads = list(reader)
+            
+        if index < 1 or index > len(payloads):
+            return {"status": "error", "error": f"Index out of range. Must be between 1 and {len(payloads)}."}
+            
+        return {"status": "success", "payload": payloads[index - 1]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+# Resources exposing datasets
+@mcp.resource("patients://dataset")
+def get_patients_dataset_summary() -> str:
+    """
+    Get a summary of the 500 patient synthetic records dataset.
+    """
+    try:
+        filepath = "data/synthetic_patients.json"
+        if not os.path.exists(filepath):
+            return "Dataset not found. Please run the generation script first."
+        with open(filepath, "r", encoding="utf-8") as f:
+            patients = json.load(f)
+        return f"Dataset: Synthetic Patient Records\nTotal Patients: {len(patients)}\nFields: mrn, first_name, last_name, dob, ssn, phone, email, address, gender, conditions, medications, allergies, hospital, physician, admission_date, discharge_date, diagnosis_notes"
+    except Exception as e:
+        return f"Error loading patients: {str(e)}"
+
+@mcp.resource("adversary://payloads")
+def get_adversary_payloads_summary() -> str:
+    """
+    Get a summary of the 500 adversarial attack payloads dataset.
+    """
+    try:
+        filepath = "data/adversary_payloads.csv"
+        if not os.path.exists(filepath):
+            return "Dataset not found. Please run the generation script first."
+        with open(filepath, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            payloads = list(reader)
+        return f"Dataset: Adversary Attack Payloads\nTotal Payloads: {len(payloads)}\nFields: id, category, payload, timestamp"
+    except Exception as e:
+        return f"Error loading payloads: {str(e)}"
 
 if __name__ == "__main__":
     mcp.run()
